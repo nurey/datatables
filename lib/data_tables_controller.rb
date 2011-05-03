@@ -19,26 +19,37 @@ module DataTablesController
       # override columns
       columns = options_to_columns(options) if options[:columns]
       
-      # number of results
-      numResults = options[:numResults].nil? ? 10 : options[:numResults]
-
       # define columns so they are accessible from the helper
       define_columns(modelCls, columns, action)
             
       # define method that returns the data for the table
-      define_datatables_action(self, action, modelCls, columns, numResults)
+      define_datatables_action(self, action, modelCls, columns)
     end
 
-    def define_datatables_action(controller, action, modelCls, columns, numResults)      
-      define_method action.to_sym do
-        limit = params[:iDisplayLength].nil? ? numResults : params[:iDisplayLength].to_i
+    def define_datatables_action(controller, action, modelCls, columns)      
+      define_method action.to_sym do    
+        unless params[:sSearch].blank?
+          #XXX hardcode search on name column
+          conditions = "(name ILIKE '%#{params[:sSearch]}%')" 
+        end
         
-        totalRecords = modelCls.count
-        data = modelCls.find(:all, :offset => params[:iDisplayStart].to_i, :limit => limit).collect do |instance|
+        total_records = modelCls.count  
+        total_display_records = modelCls.count :conditions => conditions
+        
+        sort_column = params[:iSortCol_0].to_i
+        sort_column = 1 if sort_column == 0
+        current_page = (params[:iDisplayStart].to_i/params[:iDisplayLength].to_i rescue 0)+1
+        objects = modelCls.paginate(:page => current_page, 
+                                    :order => "#{columns[sort_column][:name]} #{params[:sSortDir_0]}", 
+                                    :conditions => conditions,
+                                    :per_page => params[:iDisplayLength])
+        data = objects.collect do |instance|
           columns.collect { |column| datatables_instance_get_value(instance, column) }
         end
-        render :text => {:iTotalRecords => totalRecords, :iTotalDisplayRecords => totalRecords,
-            :aaData => data, :sEcho => params[:sEcho].to_i}.to_json
+        render :text => {:iTotalRecords => total_records, 
+                         :iTotalDisplayRecords => total_display_records,
+                         :aaData => data, 
+                         :sEcho => params[:sEcho].to_i}.to_json
       end
     end
     
