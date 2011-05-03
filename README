@@ -1,7 +1,7 @@
 Datatables
 ==========
 
-Rails plugin for adding JQuery DataTables to your application.
+Rails 3 plugin for adding JQuery DataTables to your application.
 
 DataTables: http://datatables.net/index
 
@@ -12,14 +12,14 @@ JQuery, JQuery UI, and the DataTables JQuery plugin
 Features:
 
 Easy definition of a table for an ActiveRecord model.
-Supports pagination.
+Supports pagination using will_paginate.
+Supports sorting.
 
 
 TODO
 =======
 
 Add tests.
-Add sorting.
 
 
 Example
@@ -32,7 +32,7 @@ Controller
 
 datatables_source :users_source, :user, :columns => [
   :username, :fullname, {:name => "updated_at", :eval => 'obj.updated_at.getlocal.rfc2822'},
-  {:name => "Options", :method => :user_options_column}], :numResults => 10
+  {:name => "Options", :method => :user_options_column}]
 
 This defines a table, named users_source, for the User model.
 
@@ -66,7 +66,7 @@ Because DataTables uses AJAX to load the data in the table, you must define a ro
 Example
 =========
 
-map.users_source '/datatables/user', :controller => :user, :action => :users_source
+match 'datatables/user' => "user#users_source", :as => "users_source"
 
 
 Displaying the table
@@ -78,3 +78,4 @@ Displaying a table is probably the easiest part. In a view for your controller, 
 
 
 Copyright (c) 2010 Chris Moos, released under the MIT license
+Copyright (c) 2011 Ilia Lobsanov, released under the MIT license
