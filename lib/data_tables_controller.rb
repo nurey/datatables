@@ -31,10 +31,13 @@ module DataTablesController
     def define_datatables_action(controller, action, modelCls, conditions, columns)      
       define_method action.to_sym do
         unless params[:sSearch].blank?
-          #XXX hardcode search on name column
-          conditions.push "(name ILIKE '%#{params[:sSearch]}%')" 
+          search_conditions = []
+          columns.find_all { |col| col.has_key?(:attribute) }.each do |col|
+            search_conditions << "(#{col[:attribute]} ILIKE '%%#{params[:sSearch]}%%')" 
+          end
+          conditions << '(' + search_conditions.join(" OR ") + ')'
         end
-        
+         
         total_records = modelCls.count  
         total_display_records = modelCls.count :conditions => conditions
         

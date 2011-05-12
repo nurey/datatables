@@ -9,12 +9,15 @@ module DataTablesHelper
     
     columns = datatable[:attrs].collect { |a| "<th>#{a}</th>" }.join
     column_nulls = datatable[:attrs].slice(1..-1).collect { |a| "null" }.join ","
+    #footer_columns = datatable[:attrs].collect { |a| "<th><input type='text' name='search_#{a}' value='Search #{a}' class='search_init' /></th>" }.join
+    #table_footer = "<tr>#{footer_columns}</tr>"
+    
     table_header = "<tr>#{columns}</tr>"
     url = method("#{datatable[:action]}_url".to_sym).call
     html = "
 <script>
 $(document).ready(function() {
-  $('##{datatable[:action]}').dataTable({
+  var oTable = $('##{datatable[:action]}').dataTable({
     sDom: 'C<\"clear\">lfrtip',
     bJQueryUI: true,
     bProcessing: true,
@@ -32,6 +35,11 @@ $(document).ready(function() {
         #{column_nulls}
 			],
   });
+  $('tfoot input').keyup( function () {
+  		/* Filter on the column (the index) of this element */
+  		oTable.fnFilter( this.value, $('tfoot input').index(this) );
+  	} );
+  
 });
 </script>
 <table id=\"#{datatable[:action]}\" #{html_opts}>
