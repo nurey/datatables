@@ -5,7 +5,7 @@ module DataTablesController
   
   module ClassMethods
     def datatables_source(action, model, *attrs)
-      modelCls = Kernel.const_get(model.to_s.capitalize)
+      modelCls = Kernel.const_get(model.to_s.split("_").collect(&:capitalize).join)
       modelAttrs = modelCls.new.attributes
       
       columns = []
