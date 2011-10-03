@@ -33,7 +33,7 @@ module DataTablesController
         unless params[:sSearch].blank?
           search_conditions = []
           columns.find_all { |col| col.has_key?(:attribute) }.each do |col|
-            search_conditions << "(#{col[:attribute]} ILIKE '%%#{params[:sSearch]}%%')" 
+            search_conditions << "(text(#{col[:attribute]}) ILIKE '%%#{params[:sSearch]}%%')"
           end
           conditions << '(' + search_conditions.join(" OR ") + ')'
         end
