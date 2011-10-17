@@ -57,6 +57,22 @@ def user_options_column(user)
   "<a href=\"#{url_for :action => 'view', :id => user.id}\">View User</a>"
 end
 
+options:
+-------
+In addition to :column, additional options can be passed in:
+
+:conditions (conditions that will be ANDed to any search query)
+:join_tables (if you need to include any additional ActiveRecord table relationships from belongs_to/etc.)
+
+example that will show both the tweet and the user who the tweet belong to:
+ datatables_source :tweets_source, :tweet, :columns => [
+    {:name => "Actions", :method => :datatables_actions_column},
+    :name, {:name=>"User", :method => :tweet_user_column } ],
+   :conditions => ['censorsed=0'],
+   :join_tables => ['user']
+
+Known Issue - cannot sort/filter by joined tables
+
 
 Routes
 =========

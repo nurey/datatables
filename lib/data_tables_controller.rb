@@ -20,16 +20,19 @@ module DataTablesController
       columns = options_to_columns(options) if options[:columns]
       
       conditions = options[:conditions] || []
+      join_tables = options[:join_tables] || []
 
       # define columns so they are accessible from the helper
       define_columns(modelCls, columns, action)
             
       # define method that returns the data for the table
-      define_datatables_action(self, action, modelCls, conditions, columns)
+      define_datatables_action(self, action, modelCls, conditions, columns, join_tables)
     end
 
-    def define_datatables_action(controller, action, modelCls, conditions, columns)      
+    def define_datatables_action(controller, action, modelCls, conditions, columns,join_tables)      
       define_method action.to_sym do
+        total_records = modelCls.count :conditions => conditions.join(" AND ")
+
         unless params[:sSearch].blank?
           search_conditions = []
           columns.find_all { |col| col.has_key?(:attribute) }.each do |col|
@@ -37,16 +40,17 @@ module DataTablesController
           end
           conditions << '(' + search_conditions.join(" OR ") + ')'
         end
+        joined_conditions = conditions.join(" AND ")
          
-        total_records = modelCls.count  
-        total_display_records = modelCls.count :conditions => conditions
+        total_display_records = modelCls.count :conditions => joined_conditions
         
         sort_column = params[:iSortCol_0].to_i
         sort_column = 1 if sort_column == 0
         current_page = (params[:iDisplayStart].to_i/params[:iDisplayLength].to_i rescue 0)+1
         objects = modelCls.paginate(:page => current_page, 
                                     :order => "#{columns[sort_column][:name]} #{params[:sSortDir_0]}", 
-                                    :conditions => conditions.join(" AND "),
+                                    :conditions => joined_conditions,
+                                    :include => join_tables,
                                     :per_page => params[:iDisplayLength])
         data = objects.collect do |instance|
           columns.collect { |column| datatables_instance_get_value(instance, column) }
